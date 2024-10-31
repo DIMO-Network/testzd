@@ -116,25 +116,25 @@ const main = async () => {
     console.log("Account address:", accountAddress)
 
     // Donothing operation just to get the contract deployed.
-    const userOpHash = await kernelClient.sendUserOperation({
-        userOperation: {
-            callData: await kernelClient.account.encodeCallData({
-                to: zeroAddress,
-                value: BigInt(0),
-                data: "0x",
-            }),
-        },
-    })
+    // const userOpHash = await kernelClient.sendUserOperation({
+    //     userOperation: {
+    //         callData: await kernelClient.account.encodeCallData({
+    //             to: zeroAddress,
+    //             value: BigInt(0),
+    //             data: "0x",
+    //         }),
+    //     },
+    // })
 
-    console.log("First UserOp hash:", userOpHash)
+    // console.log("First UserOp hash:", userOpHash)
 
     const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
-    await bundlerClient.waitForUserOperationReceipt({
-        hash: userOpHash,
-        timeout: 1000 * 15,
-    })
+    // await bundlerClient.waitForUserOperationReceipt({
+    //     hash: userOpHash,
+    //     timeout: 1000 * 15,
+    // })
 
-    console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + userOpHash)
+    // console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + userOpHash)
 
     // // Construct a Kernel account
     // const workerAccount = await createKernelAccount(publicClient, {
@@ -167,41 +167,40 @@ const main = async () => {
     // })
 
     // // Send a UserOp
-    // const userOpHash2 = await workerKernelClient.sendUserOperation({
+    const mintOpHash = await kernelClient.sendUserOperation({
+        userOperation: {
+            // sender: kernelClient.account.address,
+            callData: await kernelClient.account.encodeCallData({
+                to: "0x5eAA326fB2fc97fAcCe6A79A304876daD0F2e96c",
+                value: BigInt(0),
+                data: encodeFunctionData({
+                    abi: contractABI,
+                    functionName: "mintVehicleWithDeviceDefinition",
+                    args: [
+                        BigInt(19),
+                        "0xd744468B9192301650f8Cb5e390BdD824DFA6Dd9",
+                        "cadillac_lyriq_2023",
+                        [
+                            {"attribute": "Make", "info": "Cadillac"},
+                            {"attribute": "Model", "info": "Lyriq" },
+                            { "attribute": "Year", "info": "2023" },
+                        ],
+                    ]
+                }),
+            }),
+        },
+    })
 
-    //     userOperation: {
-    //         // sender: kernelClient.account.address,
-    //         callData: await kernelClient.account.encodeCallData({
-    //             to: zeroAddress,
-    //             value: BigInt(0),
-    //             data: encodeFunctionData({
-    //                 abi: contractABI,
-    //                 functionName: "mintVehicleWithDeviceDefinition",
-    //                 args: [
-    //                     BigInt(19),
-    //                     "0xd744468B9192301650f8Cb5e390BdD824DFA6Dd9",
-    //                     "cadillac_lyriq_2023",
-    //                     [
-    //                         {"attribute": "Make", "info": "Cadillac"},
-    //                         {"attribute": "Model", "info": "Lyriq" },
-    //                         { "attribute": "Year", "info": "2023" },
-    //                     ],
-    //                 ]
-    //             }),
-    //         }),
-    //     },
-    // })
+    console.log("UserOp hash:", mintOpHash)
+    console.log("Waiting for UserOp to complete...")
 
-    // console.log("UserOp hash:", userOpHash)
-    // console.log("Waiting for UserOp to complete...")
+    // const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
+    await bundlerClient.waitForUserOperationReceipt({
+        hash: mintOpHash,
+        timeout: 1000 * 15,
+    })
 
-    // // const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
-    // await bundlerClient.waitForUserOperationReceipt({
-    //     hash: userOpHash2,
-    //     timeout: 1000 * 15,
-    // })
-
-    // console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + userOpHash2)
+    console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + mintOpHash)
 }
 
 main()
