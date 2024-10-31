@@ -115,57 +115,6 @@ const main = async () => {
     const accountAddress = kernelClient.account.address
     console.log("Account address:", accountAddress)
 
-    // Donothing operation just to get the contract deployed.
-    // const userOpHash = await kernelClient.sendUserOperation({
-    //     userOperation: {
-    //         callData: await kernelClient.account.encodeCallData({
-    //             to: zeroAddress,
-    //             value: BigInt(0),
-    //             data: "0x",
-    //         }),
-    //     },
-    // })
-
-    // console.log("First UserOp hash:", userOpHash)
-
-    const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
-    // await bundlerClient.waitForUserOperationReceipt({
-    //     hash: userOpHash,
-    //     timeout: 1000 * 15,
-    // })
-
-    // console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + userOpHash)
-
-    // // Construct a Kernel account
-    // const workerAccount = await createKernelAccount(publicClient, {
-    //     plugins: {
-    //         regular: workerValidator,
-    //     },
-    //     entryPoint,
-    //     kernelVersion
-    // })
-
-    // // Construct a Kernel account client
-    // const workerKernelClient = createKernelAccountClient({
-    //     account: workerAccount,
-    //     chain,
-    //     entryPoint,
-    //     bundlerTransport: http(BUNDLER_RPC),
-    //     middleware: {
-    //         sponsorUserOperation: async ({ userOperation }) => {
-    //             const zerodevPaymaster = createZeroDevPaymasterClient({
-    //                 chain,
-    //                 entryPoint,
-    //                 transport: http(PAYMASTER_RPC),
-    //             })
-    //             return zerodevPaymaster.sponsorUserOperation({
-    //                 userOperation,
-    //                 entryPoint,
-    //             })
-    //         },
-    //     },
-    // })
-
     // // Send a UserOp
     const mintOpHash = await kernelClient.sendUserOperation({
         userOperation: {
@@ -194,7 +143,9 @@ const main = async () => {
     console.log("UserOp hash:", mintOpHash)
     console.log("Waiting for UserOp to complete...")
 
-    // const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
+
+    const bundlerClient = kernelClient.extend(bundlerActions(entryPoint));
+
     await bundlerClient.waitForUserOperationReceipt({
         hash: mintOpHash,
         timeout: 1000 * 15,
