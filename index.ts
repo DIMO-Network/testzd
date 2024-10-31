@@ -5,7 +5,7 @@ import { http, createPublicClient, zeroAddress, encodeFunctionData } from "viem"
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts"
 import { polygonAmoy } from "viem/chains"
 import { ENTRYPOINT_ADDRESS_V07, bundlerActions } from "permissionless"
-import { toPermissionValidator } from "@zerodev/permissions"
+import { toPermissionValidator, serializePermissionAccount, deserializePermissionAccount } from "@zerodev/permissions"
 import { toECDSASigner } from "@zerodev/permissions/signers"
 
 import {
@@ -91,6 +91,10 @@ const main = async () => {
         kernelVersion
     })
 
+    // const accountAddress = kernelClient.account.address
+    console.log("Account address:", account.address)
+
+
     // Construct a Kernel account client
     const kernelClient = createKernelAccountClient({
         account,
@@ -112,11 +116,41 @@ const main = async () => {
         },
     })
 
-    const accountAddress = kernelClient.account.address
-    console.log("Account address:", accountAddress)
+    // HAPPENING SOMEWHERE ELSE
+
+    const sessionKey = await serializePermissionAccount(account, workerPrivateKey);
+
+    console.log("Session key", sessionKey);
+
+    const workerAccount = await deserializePermissionAccount(publicClient, entryPoint, KERNEL_V3_1, sessionKey);
+
+    // Somehow I deploy this thing.
+
+
+    const workerKernelClient = createKernelAccountClient({
+        account: workerAccount,
+        chain,
+        entryPoint,
+        bundlerTransport: http(BUNDLER_RPC),
+        middleware: {
+            sponsorUserOperation: async ({ userOperation }) => {
+                const zerodevPaymaster = createZeroDevPaymasterClient({
+                    chain,
+                    entryPoint,
+                    transport: http(PAYMASTER_RPC),
+                })
+                return zerodevPaymaster.sponsorUserOperation({
+                    userOperation,
+                    entryPoint,
+                })
+            },
+        },
+    })
+
+
 
     // // Send a UserOp
-    const mintOpHash = await kernelClient.sendUserOperation({
+    const mintOpHash = await workerKernelClient.sendUserOperation({
         userOperation: {
             // sender: kernelClient.account.address,
             callData: await kernelClient.account.encodeCallData({
@@ -130,8 +164,8 @@ const main = async () => {
                         "0xd744468B9192301650f8Cb5e390BdD824DFA6Dd9",
                         "cadillac_lyriq_2023",
                         [
-                            {"attribute": "Make", "info": "Cadillac"},
-                            {"attribute": "Model", "info": "Lyriq" },
+                            { "attribute": "Make", "info": "Cadillac" },
+                            { "attribute": "Model", "info": "Lyriq" },
                             { "attribute": "Year", "info": "2023" },
                         ],
                     ]
@@ -150,6 +184,7 @@ const main = async () => {
         hash: mintOpHash,
         timeout: 1000 * 15,
     })
+
 
     console.log("View completed UserOp here: https://jiffyscan.xyz/userOpHash/" + mintOpHash)
 }
